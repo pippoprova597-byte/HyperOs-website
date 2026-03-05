@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HyperOS — We Build the Future</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090d;--bg2:#0a0f16;--bg3:#0e1520;
+  --border:#1a2535;--border2:#243040;
+  --accent:#00d4ff;--accent2:#0055ff;--accent3:#00ff88;
+  --red:#ff3355;--yellow:#ffcc00;
+  --text:#d0e0f0;--text-dim:#4a6070;--text-mid:#7a9aaa;
+  --font-ui:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden;cursor:none}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s;box-shadow:0 0 12px var(--accent)}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(0,212,255,.35);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:width .2s,height .2s,border-color .2s}
+body:has(a:hover) #cursor,body:has(button:hover) #cursor{width:16px;height:16px;background:var(--accent3)}
+body:has(a:hover) #cursor-ring,body:has(button:hover) #cursor-ring{width:44px;height:44px;border-color:var(--accent3)}
+
+/* SCANLINES */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,.018) 2px,rgba(0,212,255,.018) 4px);pointer-events:none;z-index:9990}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:0;right:0;height:32px;background:rgba(8,12,18,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);display:flex;align-items:center;z-index:9000;user-select:none}
+.tb-logo{display:flex;align-items:center;gap:8px;padding:0 18px;color:var(--accent);font-size:12px;letter-spacing:3px;font-weight:700;border-right:1px solid var(--border);height:100%;cursor:pointer}
+.tb-logo .hex{width:16px;height:16px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+.tb-menus{display:flex;height:100%}
+.tb-menu-item{position:relative;display:flex;align-items:center;padding:0 14px;font-size:12px;color:var(--text-mid);cursor:pointer;transition:color .15s,background .15s;letter-spacing:.5px;gap:5px}
+.tb-menu-item:hover{color:var(--text);background:rgba(0,212,255,.07)}
+.tb-menu-item.active{color:var(--accent);background:rgba(0,212,255,.1)}
+.tb-dropdown{position:absolute;top:100%;left:0;min-width:220px;background:rgba(10,15,22,.97);border:1px solid var(--border2);border-top:2px solid var(--accent);backdrop-filter:blur(24px);padding:6px 0;opacity:0;pointer-events:none;transform:translateY(-6px);transition:opacity .18s,transform .18s;z-index:9100;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(0,212,255,.05)}
+.tb-menu-item.active .tb-dropdown{opacity:1;pointer-events:all;transform:translateY(0)}
+.dd-item{display:flex;align-items:center;gap:10px;padding:7px 16px;font-size:11.5px;color:var(--text-mid);cursor:pointer;transition:color .12s,background .12s;letter-spacing:.3px}
+.dd-item:hover{color:var(--accent);background:rgba(0,212,255,.07)}
+.dd-item .dd-ico{font-size:12px;width:16px;text-align:center}
+.dd-item .dd-shortcut{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--text-dim)}
+.dd-sep{height:1px;background:var(--border);margin:5px 12px}
+
+/* LANGUAGE MENU — right side of topbar */
+#lang-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:0 14px;height:100%;
+  font-size:12px;color:var(--text-mid);
+  cursor:pointer;letter-spacing:.5px;
+  border-left:1px solid var(--border);
+  position:relative;
+  transition:color .15s,background .15s;
+}
+#lang-btn:hover{color:var(--text);background:rgba(0,212,255,.07)}
+#lang-btn.active{color:var(--accent);background:rgba(0,212,255,.1)}
+#lang-btn .flag{font-size:14px;line-height:1}
+#lang-btn .chevron{font-size:8px;transition:transform .2s;color:var(--text-dim)}
+#lang-btn.active .chevron{transform:rotate(180deg)}
+
+#lang-dropdown{
+  position:absolute;top:100%;right:0;
+  width:190px;
+  background:rgba(10,15,22,.97);
+  border:1px solid var(--border2);
+  border-top:2px solid var(--accent);
+  backdrop-filter:blur(24px);
+  padding:6px 0;
+  opacity:0;pointer-events:none;
+  transform:translateY(-6px);
+  transition:opacity .18s,transform .18s;
+  z-index:9200;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+#lang-btn.active #lang-dropdown{opacity:1;pointer-events:all;transform:translateY(0)}
+
+.lang-option{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 16px;
+  font-size:12px;color:var(--text-mid);
+  cursor:pointer;
+  transition:color .12s,background .12s;
+  letter-spacing:.3px;
+}
+.lang-option:hover{color:var(--accent);background:rgba(0,212,255,.07)}
+.lang-option.selected{color:var(--accent3)}
+.lang-option .lf{font-size:15px}
+.lang-option .ln{flex:1}
+.lang-option .lc{font-family:var(--font-mono);font-size:10px;color:var(--text-dim)}
+.lang-option.selected .lc{color:var(--accent3)}
+
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:16px;padding:0 18px;font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim)}
+.tb-right .status-dot{width:5px;height:5px;border-radius:50%;background:var(--accent3);box-shadow:0 0 6px var(--accent3);animation:blink 2.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px 40px;position:relative;overflow:hidden}
+#hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,black 40%,transparent 100%)}
+.hero-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:24px;display:flex;align-items:center;gap:10px;animation:fadein .8s ease both}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';width:40px;height:1px;background:var(--accent);opacity:.4}
+.hero-title{font-size:clamp(52px,8vw,110px);font-weight:800;line-height:.92;text-align:center;letter-spacing:-2px;margin-bottom:28px;animation:fadein .8s .1s ease both}
+.hero-title .line1{display:block;color:var(--text)}
+.hero-title .line2{display:block;background:linear-gradient(90deg,var(--accent2),var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{max-width:560px;text-align:center;font-size:16px;line-height:1.7;color:var(--text-mid);margin-bottom:48px;font-family:var(--font-mono);animation:fadein .8s .2s ease both}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadein .8s .3s ease both}
+.btn{padding:12px 28px;font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--accent);color:#000;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)}
+.btn-primary:hover{background:var(--accent3);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,255,.3)}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent);clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)}
+.btn-outline:hover{background:rgba(0,212,255,.1);transform:translateY(-2px)}
+.hero-stats{display:flex;gap:48px;margin-top:72px;animation:fadein .8s .4s ease both}
+.stat{text-align:center}
+.stat-n{font-size:36px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-family:var(--font-mono)}
+.stat-l{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+@keyframes fadein{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* SECTIONS */
+.section-label{font-family:var(--font-mono);font-size:10px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;max-width:60px;height:1px;background:var(--accent);opacity:.3}
+.section-title{font-size:clamp(32px,5vw,54px);font-weight:800;line-height:1.05;letter-spacing:-1px;margin-bottom:18px}
+.section-sub{font-size:15px;color:var(--text-mid);max-width:520px;line-height:1.7;font-family:var(--font-mono)}
+.full-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0}
+.page-section{scroll-margin-top:40px}
+
+/* ABOUT */
+#about{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1200px;margin:0 auto;padding:100px 24px}
+.about-visual{position:relative;background:var(--bg2);border:1px solid var(--border);padding:32px;font-family:var(--font-mono);font-size:12px;line-height:1.9;color:var(--text-mid)}
+.about-visual::before{content:'hyperos.sh — bash — 80×24';display:block;background:var(--border);margin:-32px -32px 24px;padding:8px 16px;font-size:11px;color:var(--text-dim);letter-spacing:.5px}
+.about-visual .c-green{color:var(--accent3)}.about-visual .c-cyan{color:var(--accent)}.about-visual .c-dim{color:var(--text-dim)}
+.about-visual .cursor{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:middle;animation:blink 1s step-end infinite}
+.about-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.tag{padding:5px 12px;border:1px solid var(--border2);font-size:11px;font-family:var(--font-mono);color:var(--text-dim);letter-spacing:.5px;transition:all .2s}
+.tag:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.06)}
+
+/* PRODUCTS */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2px;margin-top:56px;border:1px solid var(--border)}
+.product-card{background:var(--bg2);padding:36px 32px;border:1px solid transparent;position:relative;overflow:hidden;transition:all .25s;cursor:pointer}
+.product-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0);transition:transform .3s}
+.product-card:hover{background:var(--bg3);border-color:var(--border2)}
+.product-card:hover::before{transform:scaleX(1)}
+.pc-num{font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:20px}
+.pc-icon{font-size:28px;margin-bottom:16px;filter:grayscale(1);transition:filter .2s}
+.product-card:hover .pc-icon{filter:none}
+.pc-name{font-size:20px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px;color:var(--text)}
+.pc-desc{font-size:13px;color:var(--text-mid);line-height:1.7;font-family:var(--font-mono)}
+.pc-status{display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:10px;font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase}
+.status-live{color:var(--accent3)}.status-live::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;animation:blink 1.5s infinite}
+.status-wip{color:var(--yellow)}.status-wip::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.status-planned{color:var(--text-dim)}.status-planned::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin-top:56px}
+.member-card{background:var(--bg2);border:1px solid var(--border);padding:32px 28px;position:relative;transition:all .25s;overflow:hidden}
+.member-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);transform:scaleX(0);transition:transform .3s}
+.member-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.member-card:hover::after{transform:scaleX(1)}
+.member-avatar{width:56px;height:56px;background:linear-gradient(135deg,var(--accent2),var(--accent));clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;margin-bottom:20px}
+.member-name{font-size:18px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.member-role{font-size:11px;font-family:var(--font-mono);color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px}
+.member-bio{font-size:12.5px;color:var(--text-mid);line-height:1.7;font-family:var(--font-mono)}
+.member-skills{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.skill-badge{padding:3px 9px;background:var(--bg3);border:1px solid var(--border);font-size:10px;font-family:var(--font-mono);color:var(--text-dim);letter-spacing:.5px}
+
+/* MANIFESTO */
+#manifesto{max-width:1200px;margin:0 auto;padding:100px 24px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.manifesto-list{margin-top:40px;display:flex;flex-direction:column;gap:0}
+.manifesto-item{display:flex;gap:20px;align-items:flex-start;padding:24px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s}
+.manifesto-item:first-child{border-top:1px solid var(--border)}
+.manifesto-item:hover .mi-num,.manifesto-item:hover .mi-title{color:var(--accent)}
+.mi-num{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;flex-shrink:0;padding-top:3px;min-width:28px;transition:color .2s}
+.mi-title{font-size:17px;font-weight:700;margin-bottom:6px;transition:color .2s}
+.mi-desc{font-size:13px;color:var(--text-mid);line-height:1.7;font-family:var(--font-mono)}
+.manifesto-quote{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:40px;margin-top:40px;font-size:22px;font-weight:700;line-height:1.4;letter-spacing:-.3px;color:var(--text);position:sticky;top:60px}
+.manifesto-quote .quote-author{margin-top:20px;font-size:11px;font-family:var(--font-mono);color:var(--text-dim);letter-spacing:2px;text-transform:uppercase}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;border:1px solid var(--border);margin-bottom:48px}
+.contact-item{background:var(--bg2);padding:28px 20px;transition:all .2s;cursor:pointer;text-decoration:none;color:inherit}
+.contact-item:hover{background:var(--bg3);color:var(--accent)}
+.contact-item:hover .ci-label{color:var(--accent)}
+.ci-icon{font-size:22px;margin-bottom:12px}
+.ci-label{font-size:11px;font-family:var(--font-mono);color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;transition:color .2s}
+.ci-value{font-size:14px;font-weight:600}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:32px 24px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)}
+.footer-logo{display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:700;letter-spacing:3px;font-size:12px}
+.footer-logo .hex{width:12px;height:12px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{color:var(--text-dim);text-decoration:none;transition:color .15s}
+.footer-links a:hover{color:var(--accent)}
+
+/* LANG TRANSITION */
+[data-i18n]{transition:opacity .15s}
+.lang-fade{opacity:0}
+
+@media(max-width:768px){
+  #about,#manifesto{grid-template-columns:1fr}
+  .hero-stats{gap:28px}
+  .contact-grid{grid-template-columns:1fr}
+  footer{flex-direction:column;gap:16px;text-align:center}
+  .tb-menus .tb-menu-item:nth-child(n+4){display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- ══ TOPBAR ══ -->
+<nav id="topbar">
+  <div class="tb-logo" onclick="window.scrollTo(0,0)">
+    <div class="hex"></div>
+    HYPEROS
+  </div>
+
+  <div class="tb-menus" id="tbMenus">
+
+    <div class="tb-menu-item" data-menu="about">
+      <span data-i18n="menu_about">About</span>
+      <div class="tb-dropdown">
+        <div class="dd-item" onclick="scrollToSection('about')"><span class="dd-ico">◈</span> <span data-i18n="dd_our_story">Our Story</span> <span class="dd-shortcut">§1</span></div>
+        <div class="dd-item" onclick="scrollToSection('manifesto')"><span class="dd-ico">◆</span> <span data-i18n="dd_manifesto">Manifesto</span> <span class="dd-shortcut">§4</span></div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="scrollToSection('contact')"><span class="dd-ico">◇</span> <span data-i18n="dd_contact">Contact Us</span></div>
+      </div>
+    </div>
+
+    <div class="tb-menu-item" data-menu="products">
+      <span data-i18n="menu_products">Products</span>
+      <div class="tb-dropdown">
+        <div class="dd-item" onclick="scrollToSection('products')"><span class="dd-ico">▸</span> HyperOS Terminal <span class="dd-shortcut">v2.2</span></div>
+        <div class="dd-item"><span class="dd-ico">▸</span> HyperOS Dashboard <span class="dd-shortcut">WIP</span></div>
+        <div class="dd-item"><span class="dd-ico">▸</span> HyperOS Vault <span class="dd-shortcut">Soon</span></div>
+        <div class="dd-item"><span class="dd-ico">▸</span> HyperOS Recon <span class="dd-shortcut">Soon</span></div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="scrollToSection('products')"><span class="dd-ico">◈</span> <span data-i18n="dd_view_all">View All</span></div>
+      </div>
+    </div>
+
+    <div class="tb-menu-item" data-menu="team">
+      <span data-i18n="menu_team">Team</span>
+      <div class="tb-dropdown">
+        <div class="dd-item" onclick="scrollToSection('team')"><span class="dd-ico">◈</span> <span data-i18n="dd_meet_team">Meet the Team</span></div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="scrollToSection('contact')"><span class="dd-ico">+</span> <span data-i18n="dd_join">Join HyperOS</span></div>
+      </div>
+    </div>
+
+    <div class="tb-menu-item" data-menu="dev">
+      <span data-i18n="menu_dev">Developers</span>
+      <div class="tb-dropdown">
+        <div class="dd-item"><span class="dd-ico">▸</span> GitHub <span class="dd-shortcut">↗</span></div>
+        <div class="dd-item"><span class="dd-ico">▸</span> <span data-i18n="dd_docs">Documentation</span> <span class="dd-shortcut">↗</span></div>
+        <div class="dd-item"><span class="dd-ico">▸</span> Changelog</div>
+        <div class="dd-sep"></div>
+        <div class="dd-item"><span class="dd-ico">◈</span> Open Source</div>
+      </div>
+    </div>
+
+    <div class="tb-menu-item" data-menu="window">
+      <span data-i18n="menu_window">Window</span>
+      <div class="tb-dropdown">
+        <div class="dd-item" onclick="document.documentElement.requestFullscreen?.()"><span class="dd-ico">⛶</span> <span data-i18n="dd_fullscreen">Fullscreen</span> <span class="dd-shortcut">F11</span></div>
+        <div class="dd-item" onclick="window.scrollTo(0,0)"><span class="dd-ico">↑</span> <span data-i18n="dd_top">Scroll to Top</span> <span class="dd-shortcut">Home</span></div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="toggleTheme()"><span class="dd-ico" id="themeIcon">☀</span> <span data-i18n="dd_theme">Toggle Theme</span> <span class="dd-shortcut">⌘T</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- right side: lang + clock -->
+  <div style="margin-left:auto;display:flex;align-items:center;height:100%">
+
+    <!-- LANGUAGE SELECTOR -->
+    <div id="lang-btn" onclick="toggleLangMenu(event)">
+      <span id="lang-flag" class="flag">🇬🇧</span>
+      <span id="lang-label">EN</span>
+      <span class="chevron">▾</span>
+      <div id="lang-dropdown">
+        <div class="lang-option selected" onclick="setLang('en',this)" data-lang="en">
+          <span class="lf">🇬🇧</span><span class="ln">English</span><span class="lc">EN</span>
+        </div>
+        <div class="lang-option" onclick="setLang('it',this)" data-lang="it">
+          <span class="lf">🇮🇹</span><span class="ln">Italiano</span><span class="lc">IT</span>
+        </div>
+        <div class="lang-option" onclick="setLang('es',this)" data-lang="es">
+          <span class="lf">🇪🇸</span><span class="ln">Español</span><span class="lc">ES</span>
+        </div>
+        <div class="lang-option" onclick="setLang('fr',this)" data-lang="fr">
+          <span class="lf">🇫🇷</span><span class="ln">Français</span><span class="lc">FR</span>
+        </div>
+        <div class="lang-option" onclick="setLang('de',this)" data-lang="de">
+          <span class="lf">🇩🇪</span><span class="ln">Deutsch</span><span class="lc">DE</span>
+        </div>
+        <div class="lang-option" onclick="setLang('ja',this)" data-lang="ja">
+          <span class="lf">🇯🇵</span><span class="ln">日本語</span><span class="lc">JA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tb-right">
+      <div class="status-dot"></div>
+      <span id="tb-time">--:--:--</span>
+      <span id="tb-date">--/--/----</span>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ══ HERO ══ -->
+<section id="hero">
+  <div class="hero-eyebrow" data-i18n="hero_eyebrow">HyperOS Project — Est. 2024</div>
+  <h1 class="hero-title">
+    <span class="line1" data-i18n="hero_line1">We Build</span>
+    <span class="line2" data-i18n="hero_line2">The Future</span>
+  </h1>
+  <p class="hero-sub" data-i18n="hero_sub">Open tools for developers, security researchers and power users who refuse to settle for ordinary.</p>
+  <div class="hero-ctas">
+    <a class="btn btn-primary" onclick="scrollToSection('products')" data-i18n="hero_cta1">Explore Products</a>
+    <a class="btn btn-outline" onclick="scrollToSection('about')" data-i18n="hero_cta2">Our Story</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-n">4+</div><div class="stat-l" data-i18n="stat_products">Products</div></div>
+    <div class="stat"><div class="stat-n">100%</div><div class="stat-l" data-i18n="stat_open">Open Source</div></div>
+    <div class="stat"><div class="stat-n">∞</div><div class="stat-l" data-i18n="stat_ambition">Ambition</div></div>
+  </div>
+</section>
+
+<div class="full-divider"></div>
+
+<!-- ══ ABOUT ══ -->
+<div id="about" class="page-section">
+  <div class="about-visual">
+<span class="c-green">user@hyperos</span><span class="c-dim">:</span><span class="c-cyan">~</span> <span style="color:var(--text)">whoami</span>
+<br/><span class="c-cyan">HyperOS Project</span>
+<br/><br/>
+<span class="c-green">user@hyperos</span><span class="c-dim">:</span><span class="c-cyan">~</span> <span style="color:var(--text)">cat mission.txt</span>
+<br/><span class="c-dim" data-i18n="terminal_line1">We build professional-grade tools</span>
+<br/><span class="c-dim" data-i18n="terminal_line2">for the people who build everything else.</span>
+<br/><span class="c-dim" data-i18n="terminal_line3">No bloat. No compromise. No bullshit.</span>
+<br/><br/>
+<span class="c-green">user@hyperos</span><span class="c-dim">:</span><span class="c-cyan">~</span> <span style="color:var(--text)">uptime</span>
+<br/><span class="c-dim" data-i18n="terminal_uptime">since 2024 — still running</span>
+<br/><br/>
+<span class="c-green">user@hyperos</span><span class="c-dim">:</span><span class="c-cyan">~</span> <span class="cursor"></span>
+  </div>
+  <div class="about-content">
+    <div class="section-label" data-i18n="about_label">About us</div>
+    <h2 class="section-title" data-i18n="about_title">Built by devs,<br/>for devs.</h2>
+    <p class="about-text" style="font-size:15px;color:var(--text-mid);line-height:1.8;font-family:var(--font-mono);margin-top:24px" data-i18n="about_text">HyperOS is an independent project born out of frustration with bloated, over-engineered tools that get in the way instead of helping.<br/><br/>We design lean, powerful software that respects your time, your machine and your intelligence.</p>
+    <div class="about-tags">
+      <span class="tag" data-i18n="tag1">Open Source</span>
+      <span class="tag" data-i18n="tag2">Privacy First</span>
+      <span class="tag" data-i18n="tag3">No Telemetry</span>
+      <span class="tag" data-i18n="tag4">Cross Platform</span>
+      <span class="tag" data-i18n="tag5">Keyboard Driven</span>
+      <span class="tag" data-i18n="tag6">Dark by Default</span>
+    </div>
+  </div>
+</div>
+
+<div class="full-divider"></div>
+
+<!-- ══ PRODUCTS ══ -->
+<div id="products" class="page-section" style="max-width:1200px;margin:0 auto;padding:100px 24px">
+  <div class="section-label" data-i18n="products_label">What we ship</div>
+  <h2 class="section-title" data-i18n="products_title">The HyperOS Suite</h2>
+  <p class="section-sub" data-i18n="products_sub">Each tool is standalone, composable, and built with the same design philosophy.</p>
+  <div class="products-grid">
+    <div class="product-card">
+      <div class="pc-num">01 / TERMINAL</div>
+      <div class="pc-icon">⬡</div>
+      <div class="pc-name">HyperOS Terminal</div>
+      <div class="pc-desc" data-i18n="prod1_desc">A professional CLI environment with built-in cybersecurity tools, dev utilities, system monitoring and persistent notes. Runs on Windows, macOS, Linux.</div>
+      <div class="pc-status status-live" data-i18n="prod1_status">Live — v2.2.0</div>
+    </div>
+    <div class="product-card">
+      <div class="pc-num">02 / MONITOR</div>
+      <div class="pc-icon">◈</div>
+      <div class="pc-name">HyperOS Dashboard</div>
+      <div class="pc-desc" data-i18n="prod2_desc">Real-time system monitoring in your browser. CPU, RAM, network, processes — visualized with the precision of a control panel.</div>
+      <div class="pc-status status-wip" data-i18n="prod2_status">In Development</div>
+    </div>
+    <div class="product-card">
+      <div class="pc-num">03 / SECURITY</div>
+      <div class="pc-icon">◆</div>
+      <div class="pc-name">HyperOS Vault</div>
+      <div class="pc-desc" data-i18n="prod3_desc">Local-first password manager and encrypted file storage. AES-256, zero cloud dependency. Your data stays on your machine.</div>
+      <div class="pc-status status-planned" data-i18n="prod3_status">Planned — Q2 2025</div>
+    </div>
+    <div class="product-card">
+      <div class="pc-num">04 / RECON</div>
+      <div class="pc-icon">▸</div>
+      <div class="pc-name">HyperOS Recon</div>
+      <div class="pc-desc" data-i18n="prod4_desc">OSINT and network reconnaissance interface. Domain intel, DNS, open ports, WHOIS — aggregated in one clean panel. Authorized use only.</div>
+      <div class="pc-status status-planned" data-i18n="prod4_status">Planned — Q3 2025</div>
+    </div>
+    <div class="product-card">
+      <div class="pc-num">05 / UPTIME</div>
+      <div class="pc-icon">◇</div>
+      <div class="pc-name">HyperOS Monitor</div>
+      <div class="pc-desc" data-i18n="prod5_desc">Lightweight uptime monitoring for your projects and services. Configurable checks, response time history and a clean status page.</div>
+      <div class="pc-status status-planned" data-i18n="prod5_status">Planned — Q4 2025</div>
+    </div>
+    <div class="product-card" style="background:transparent;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;min-height:220px;color:var(--text-dim)">
+      <div style="font-size:32px">+</div>
+      <div style="font-size:12px;font-family:var(--font-mono);letter-spacing:2px" data-i18n="prod_more">MORE COMING</div>
+      <div style="font-size:11px;font-family:var(--font-mono);text-align:center;padding:0 20px" data-i18n="prod_more_sub">We ship when it's ready,<br/>not when it's rushed.</div>
+    </div>
+  </div>
+</div>
+
+<div class="full-divider"></div>
+
+<!-- ══ TEAM ══ -->
+<div id="team" class="page-section" style="max-width:1200px;margin:0 auto;padding:100px 24px">
+  <div class="section-label" data-i18n="team_label">The people</div>
+  <h2 class="section-title" data-i18n="team_title">Who we are</h2>
+  <p class="section-sub" data-i18n="team_sub">A small, focused team. We care more about quality than headcount.</p>
+  <div class="team-grid">
+    <div class="member-card">
+      <div class="member-avatar">H</div>
+      <div class="member-name" data-i18n="m1_name">Founder</div>
+      <div class="member-role" data-i18n="m1_role">Lead Developer · Architect</div>
+      <div class="member-bio" data-i18n="m1_bio">Started HyperOS out of the belief that developer tools should be fast, minimal and actually enjoyable to use. Writes most of the core code.</div>
+      <div class="member-skills"><span class="skill-badge">Python</span><span class="skill-badge">Rust</span><span class="skill-badge">Systems</span><span class="skill-badge">Security</span></div>
+    </div>
+    <div class="member-card">
+      <div class="member-avatar" style="background:linear-gradient(135deg,var(--accent3),var(--accent))">D</div>
+      <div class="member-name" data-i18n="m2_name">Designer</div>
+      <div class="member-role" data-i18n="m2_role">UI/UX · Visual Systems</div>
+      <div class="member-bio" data-i18n="m2_bio">Obsessed with the intersection of aesthetics and function. Believes every interface should feel like it was made for a specific person, not for everyone.</div>
+      <div class="member-skills"><span class="skill-badge">Figma</span><span class="skill-badge">CSS</span><span class="skill-badge">Motion</span><span class="skill-badge">Branding</span></div>
+    </div>
+    <div class="member-card">
+      <div class="member-avatar" style="background:linear-gradient(135deg,var(--red),#ff8800)">S</div>
+      <div class="member-name" data-i18n="m3_name">Security</div>
+      <div class="member-role" data-i18n="m3_role">Research · Penetration Testing</div>
+      <div class="member-bio" data-i18n="m3_bio">Ethical hacker and security researcher. Makes sure HyperOS tools are both useful for security work and safe to use. Finds bugs before the bad guys do.</div>
+      <div class="member-skills"><span class="skill-badge">OSINT</span><span class="skill-badge">Network</span><span class="skill-badge">CTF</span><span class="skill-badge">Red Team</span></div>
+    </div>
+    <div class="member-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:280px">
+      <div style="font-size:32px;margin-bottom:16px;color:var(--text-dim)">+</div>
+      <div class="member-name" style="color:var(--text-dim)" data-i18n="m4_name">You?</div>
+      <div class="member-role" data-i18n="m4_role">Open Position</div>
+      <div class="member-bio" style="margin-top:12px" data-i18n="m4_bio">We're always looking for people who build things because they love building things.</div>
+      <a class="btn btn-outline" onclick="scrollToSection('contact')" style="margin-top:20px;font-size:11px;padding:8px 20px" data-i18n="m4_cta">Get in touch</a>
+    </div>
+  </div>
+</div>
+
+<div class="full-divider"></div>
+
+<!-- ══ MANIFESTO ══ -->
+<div id="manifesto" class="page-section">
+  <div>
+    <div class="section-label" data-i18n="manifesto_label">How we think</div>
+    <h2 class="section-title" data-i18n="manifesto_title">Our Manifesto</h2>
+    <div class="manifesto-list">
+      <div class="manifesto-item"><div class="mi-num">01</div><div><div class="mi-title" data-i18n="m_t1">Performance is not optional</div><div class="mi-desc" data-i18n="m_d1">A tool that makes you wait is a tool that disrespects your time. Every millisecond matters. We optimize before we ship.</div></div></div>
+      <div class="manifesto-item"><div class="mi-num">02</div><div><div class="mi-title" data-i18n="m_t2">Your data stays yours</div><div class="mi-desc" data-i18n="m_d2">No telemetry. No analytics. No cloud dependency unless you ask for it. What runs on your machine belongs to you.</div></div></div>
+      <div class="manifesto-item"><div class="mi-num">03</div><div><div class="mi-title" data-i18n="m_t3">Simple beats clever</div><div class="mi-desc" data-i18n="m_d3">We resist the urge to add features that don't earn their place. Every command, every UI element has to justify its existence.</div></div></div>
+      <div class="manifesto-item"><div class="mi-num">04</div><div><div class="mi-title" data-i18n="m_t4">Open source by default</div><div class="mi-desc" data-i18n="m_d4">If we build something useful, the community should be able to inspect it, improve it and build on top of it.</div></div></div>
+      <div class="manifesto-item"><div class="mi-num">05</div><div><div class="mi-title" data-i18n="m_t5">Ship when it's right</div><div class="mi-desc" data-i18n="m_d5">We don't release broken software to hit a deadline. We'd rather be late and excellent than on-time and embarrassing.</div></div></div>
+    </div>
+  </div>
+  <div>
+    <div class="manifesto-quote">
+      <span data-i18n="quote_text">"The best tool is the one you don't have to think about — it just works, exactly the way you expected."</span>
+      <div class="quote-author">— HyperOS Team</div>
+    </div>
+  </div>
+</div>
+
+<div class="full-divider"></div>
+
+<!-- ══ CONTACT ══ -->
+<div id="contact" class="page-section" style="max-width:800px;margin:0 auto;padding:100px 24px;text-align:center">
+  <div class="section-label" style="justify-content:center" data-i18n="contact_label">Get in touch</div>
+  <h2 class="section-title" data-i18n="contact_title">Let's talk</h2>
+  <p class="section-sub" style="margin:0 auto 48px" data-i18n="contact_sub">Bug report, collaboration idea, or just want to say hi — we read everything.</p>
+  <div class="contact-grid">
+    <a class="contact-item" href="https://github.com/hyperos" target="_blank"><div class="ci-icon">⬡</div><div class="ci-label">GitHub</div><div class="ci-value">github.com/hyperos</div></a>
+    <a class="contact-item" href="mailto:hello@hyperos.dev"><div class="ci-icon">◈</div><div class="ci-label">Email</div><div class="ci-value">hello@hyperos.dev</div></a>
+    <a class="contact-item" href="https://discord.gg/hyperos" target="_blank"><div class="ci-icon">◆</div><div class="ci-label">Discord</div><div class="ci-value">discord.gg/hyperos</div></a>
+  </div>
+  <p style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim)">
+    <span data-i18n="contact_response">Average response time:</span> <span style="color:var(--accent3)" data-i18n="contact_time">under 24h</span>
+  </p>
+</div>
+
+<div class="full-divider"></div>
+<footer>
+  <div class="footer-logo"><div class="hex"></div> HYPEROS</div>
+  <span data-i18n="footer_copy">© 2024 HyperOS Project — All rights reserved</span>
+  <div class="footer-links">
+    <a href="#" onclick="scrollToSection('about')" data-i18n="menu_about">About</a>
+    <a href="#" onclick="scrollToSection('products')" data-i18n="menu_products">Products</a>
+    <a href="#" onclick="scrollToSection('team')" data-i18n="menu_team">Team</a>
+    <a href="#" onclick="scrollToSection('contact')" data-i18n="dd_contact">Contact</a>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  TRANSLATIONS
+// ═══════════════════════════════════════════════════════════
+const LANGS = {
+  en: {
+    flag:'🇬🇧', label:'EN',
+    menu_about:'About', menu_products:'Products', menu_team:'Team',
+    menu_dev:'Developers', menu_window:'Window',
+    dd_our_story:'Our Story', dd_manifesto:'Manifesto', dd_contact:'Contact Us',
+    dd_view_all:'View All', dd_meet_team:'Meet the Team', dd_join:'Join HyperOS',
+    dd_docs:'Documentation', dd_fullscreen:'Fullscreen', dd_top:'Scroll to Top',
+    dd_theme:'Toggle Theme',
+    hero_eyebrow:'HyperOS Project — Est. 2024',
+    hero_line1:'We Build', hero_line2:'The Future',
+    hero_sub:'Open tools for developers, security researchers\nand power users who refuse to settle for ordinary.',
+    hero_cta1:'Explore Products', hero_cta2:'Our Story',
+    stat_products:'Products', stat_open:'Open Source', stat_ambition:'Ambition',
+    about_label:'About us',
+    about_title:'Built by devs,<br/>for devs.',
+    about_text:'HyperOS is an independent project born out of frustration with bloated, over-engineered tools that get in the way instead of helping.<br/><br/>We design lean, powerful software that respects your time, your machine and your intelligence.',
+    terminal_line1:'We build professional-grade tools',
+    terminal_line2:'for the people who build everything else.',
+    terminal_line3:'No bloat. No compromise. No bullshit.',
+    terminal_uptime:'since 2024 — still running',
+    tag1:'Open Source', tag2:'Privacy First', tag3:'No Telemetry',
+    tag4:'Cross Platform', tag5:'Keyboard Driven', tag6:'Dark by Default',
+    products_label:'What we ship', products_title:'The HyperOS Suite',
+    products_sub:'Each tool is standalone, composable, and built with the same design philosophy.',
+    prod1_desc:'A professional CLI environment with built-in cybersecurity tools, dev utilities, system monitoring and persistent notes. Runs on Windows, macOS, Linux.',
+    prod1_status:'Live — v2.2.0',
+    prod2_desc:'Real-time system monitoring in your browser. CPU, RAM, network, processes — visualized with the precision of a control panel.',
+    prod2_status:'In Development',
+    prod3_desc:'Local-first password manager and encrypted file storage. AES-256, zero cloud dependency. Your data stays on your machine.',
+    prod3_status:'Planned — Q2 2025',
+    prod4_desc:'OSINT and network reconnaissance interface. Domain intel, DNS, open ports, WHOIS — aggregated in one clean panel. Authorized use only.',
+    prod4_status:'Planned — Q3 2025',
+    prod5_desc:'Lightweight uptime monitoring for your projects and services. Configurable checks, response time history and a clean status page.',
+    prod5_status:'Planned — Q4 2025',
+    prod_more:'MORE COMING', prod_more_sub:"We ship when it's ready,\nnot when it's rushed.",
+    team_label:'The people', team_title:'Who we are',
+    team_sub:'A small, focused team. We care more about quality than headcount.',
+    m1_name:'Founder', m1_role:'Lead Developer · Architect',
+    m1_bio:'Started HyperOS out of the belief that developer tools should be fast, minimal and actually enjoyable to use. Writes most of the core code.',
+    m2_name:'Designer', m2_role:'UI/UX · Visual Systems',
+    m2_bio:'Obsessed with the intersection of aesthetics and function. Believes every interface should feel like it was made for a specific person.',
+    m3_name:'Security', m3_role:'Research · Penetration Testing',
+    m3_bio:'Ethical hacker and security researcher. Makes sure HyperOS tools are both useful for security work and safe to use.',
+    m4_name:'You?', m4_role:'Open Position',
+    m4_bio:"We're always looking for people who build things because they love building things.",
+    m4_cta:'Get in touch',
+    manifesto_label:'How we think', manifesto_title:'Our Manifesto',
+    m_t1:'Performance is not optional', m_d1:'A tool that makes you wait is a tool that disrespects your time. Every millisecond matters. We optimize before we ship.',
+    m_t2:'Your data stays yours', m_d2:'No telemetry. No analytics. No cloud dependency unless you ask for it. What runs on your machine belongs to you.',
+    m_t3:'Simple beats clever', m_d3:"We resist the urge to add features that don't earn their place. Every command, every UI element has to justify its existence.",
+    m_t4:'Open source by default', m_d4:'If we build something useful, the community should be able to inspect it, improve it and build on top of it.',
+    m_t5:"Ship when it's right", m_d5:"We don't release broken software to hit a deadline. We'd rather be late and excellent than on-time and embarrassing.",
+    quote_text:'"The best tool is the one you don\'t have to think about — it just works, exactly the way you expected."',
+    contact_label:'Get in touch', contact_title:"Let's talk",
+    contact_sub:'Bug report, collaboration idea, or just want to say hi — we read everything.',
+    contact_response:'Average response time:', contact_time:'under 24h',
+    footer_copy:'© 2024 HyperOS Project — All rights reserved',
+  },
+
+  it: {
+    flag:'🇮🇹', label:'IT',
+    menu_about:'Info', menu_products:'Prodotti', menu_team:'Team',
+    menu_dev:'Sviluppatori', menu_window:'Finestra',
+    dd_our_story:'La Nostra Storia', dd_manifesto:'Manifesto', dd_contact:'Contattaci',
+    dd_view_all:'Vedi Tutti', dd_meet_team:'Conosci il Team', dd_join:'Unisciti a HyperOS',
+    dd_docs:'Documentazione', dd_fullscreen:'Schermo Intero', dd_top:'Torna Su',
+    dd_theme:'Cambia Tema',
+    hero_eyebrow:'HyperOS Project — Est. 2024',
+    hero_line1:'Costruiamo', hero_line2:'Il Futuro',
+    hero_sub:'Strumenti aperti per sviluppatori, ricercatori di sicurezza\ne power user che rifiutano il mediocre.',
+    hero_cta1:'Esplora i Prodotti', hero_cta2:'La Nostra Storia',
+    stat_products:'Prodotti', stat_open:'Open Source', stat_ambition:'Ambizione',
+    about_label:'Chi siamo',
+    about_title:'Fatto da devs,<br/>per devs.',
+    about_text:'HyperOS è un progetto indipendente nato dalla frustrazione verso strumenti gonfiati e sovra-ingegnerizzati che intralciano il lavoro.<br/><br/>Progettiamo software snello e potente che rispetta il tuo tempo, la tua macchina e la tua intelligenza.',
+    terminal_line1:'Costruiamo strumenti di livello professionale',
+    terminal_line2:'per le persone che costruiscono tutto il resto.',
+    terminal_line3:'Niente bloat. Niente compromessi. Niente bugie.',
+    terminal_uptime:'dal 2024 — ancora in esecuzione',
+    tag1:'Open Source', tag2:'Privacy Prima', tag3:'Niente Telemetria',
+    tag4:'Cross Platform', tag5:'Keyboard Driven', tag6:'Scuro di Default',
+    products_label:'Cosa rilasciamo', products_title:'La Suite HyperOS',
+    products_sub:'Ogni strumento è indipendente, componibile e costruito con la stessa filosofia di design.',
+    prod1_desc:'Un ambiente CLI professionale con strumenti di cybersecurity integrati, utility per sviluppatori, monitoraggio di sistema e note persistenti. Gira su Windows, macOS, Linux.',
+    prod1_status:'Live — v2.2.0',
+    prod2_desc:'Monitoraggio del sistema in tempo reale nel browser. CPU, RAM, rete, processi — visualizzati con la precisione di un pannello di controllo.',
+    prod2_status:'In Sviluppo',
+    prod3_desc:'Password manager e storage cifrato locale. AES-256, zero dipendenze cloud. I tuoi dati rimangono sulla tua macchina.',
+    prod3_status:'Pianificato — Q2 2025',
+    prod4_desc:'Interfaccia OSINT e ricognizione di rete. Intel di dominio, DNS, porte aperte, WHOIS — tutto in un pannello pulito. Solo uso autorizzato.',
+    prod4_status:'Pianificato — Q3 2025',
+    prod5_desc:'Monitoraggio uptime leggero per i tuoi progetti. Controlli configurabili, storico dei tempi di risposta e una status page pulita.',
+    prod5_status:'Pianificato — Q4 2025',
+    prod_more:'ALTRI IN ARRIVO', prod_more_sub:"Rilasciamo quando è pronto,\nnon quando si è in ritardo.",
+    team_label:'Le persone', team_title:'Chi siamo',
+    team_sub:'Un team piccolo e focalizzato. Ci importa più della qualità che del numero.',
+    m1_name:'Fondatore', m1_role:'Lead Developer · Architetto',
+    m1_bio:'Ha avviato HyperOS con la convinzione che gli strumenti per sviluppatori debbano essere veloci, minimali e piacevoli da usare. Scrive la maggior parte del codice core.',
+    m2_name:'Designer', m2_role:'UI/UX · Sistemi Visivi',
+    m2_bio:"Ossessionato dall'intersezione tra estetica e funzione. Crede che ogni interfaccia dovrebbe sembrare fatta per una persona specifica.",
+    m3_name:'Sicurezza', m3_role:'Ricerca · Penetration Testing',
+    m3_bio:'Hacker etico e ricercatore di sicurezza. Si assicura che gli strumenti HyperOS siano utili per il lavoro di sicurezza e sicuri da usare.',
+    m4_name:'Tu?', m4_role:'Posizione Aperta',
+    m4_bio:'Siamo sempre alla ricerca di persone che costruiscono cose perché amano costruire cose.',
+    m4_cta:'Contattaci',
+    manifesto_label:'Come pensiamo', manifesto_title:'Il Nostro Manifesto',
+    m_t1:'Le performance non sono opzionali', m_d1:'Uno strumento che ti fa aspettare è uno strumento che non rispetta il tuo tempo. Ogni millisecondo conta. Ottimizziamo prima di rilasciare.',
+    m_t2:'I tuoi dati restano tuoi', m_d2:'Niente telemetria. Niente analytics. Niente dipendenza dal cloud a meno che tu non lo voglia. Ciò che gira sulla tua macchina è tuo.',
+    m_t3:'Il semplice batte l\'ingegnoso', m_d3:"Resistiamo all'impulso di aggiungere funzionalità che non guadagnano il loro posto. Ogni comando e ogni elemento UI deve giustificare la sua esistenza.",
+    m_t4:'Open source per default', m_d4:'Se costruiamo qualcosa di utile, la community deve poterlo ispezionare, migliorare e su cui costruire.',
+    m_t5:'Rilascia quando è giusto', m_d5:"Non rilasciamo software rotto per rispettare una scadenza. Preferiamo essere in ritardo ed eccellenti piuttosto che puntuali e imbarazzanti.",
+    quote_text:'"Il miglior strumento è quello a cui non devi pensare — funziona e basta, esattamente come ti aspettavi."',
+    contact_label:'Contattaci', contact_title:'Parliamo',
+    contact_sub:'Segnalazione di bug, idea di collaborazione, o solo vuoi salutare — leggiamo tutto.',
+    contact_response:'Tempo di risposta medio:', contact_time:'meno di 24h',
+    footer_copy:'© 2024 HyperOS Project — Tutti i diritti riservati',
+  },
+
+  es: {
+    flag:'🇪🇸', label:'ES',
+    menu_about:'Acerca', menu_products:'Productos', menu_team:'Equipo',
+    menu_dev:'Desarrolladores', menu_window:'Ventana',
+    dd_our_story:'Nuestra Historia', dd_manifesto:'Manifiesto', dd_contact:'Contáctanos',
+    dd_view_all:'Ver Todo', dd_meet_team:'Conoce al Equipo', dd_join:'Únete a HyperOS',
+    dd_docs:'Documentación', dd_fullscreen:'Pantalla Completa', dd_top:'Ir Arriba',
+    dd_theme:'Cambiar Tema',
+    hero_eyebrow:'HyperOS Project — Est. 2024',
+    hero_line1:'Construimos', hero_line2:'El Futuro',
+    hero_sub:'Herramientas abiertas para desarrolladores, investigadores de seguridad\ny usuarios que se niegan a conformarse con lo ordinario.',
+    hero_cta1:'Explorar Productos', hero_cta2:'Nuestra Historia',
+    stat_products:'Productos', stat_open:'Código Abierto', stat_ambition:'Ambición',
+    about_label:'Sobre nosotros',
+    about_title:'Hecho por devs,<br/>para devs.',
+    about_text:'HyperOS es un proyecto independiente nacido de la frustración con herramientas pesadas y sobreingeniería que obstaculizan el trabajo.<br/><br/>Diseñamos software ligero y potente que respeta tu tiempo, tu máquina y tu inteligencia.',
+    terminal_line1:'Construimos herramientas de nivel profesional',
+    terminal_line2:'para las personas que construyen todo lo demás.',
+    terminal_line3:'Sin bloat. Sin compromiso. Sin mentiras.',
+    terminal_uptime:'desde 2024 — aún funcionando',
+    tag1:'Código Abierto', tag2:'Privacidad Primero', tag3:'Sin Telemetría',
+    tag4:'Multiplataforma', tag5:'Teclado Primero', tag6:'Oscuro por Defecto',
+    products_label:'Lo que lanzamos', products_title:'La Suite HyperOS',
+    products_sub:'Cada herramienta es independiente, componible y construida con la misma filosofía de diseño.',
+    prod1_desc:'Un entorno CLI profesional con herramientas de ciberseguridad integradas, utilidades de dev, monitoreo del sistema y notas persistentes. Funciona en Windows, macOS, Linux.',
+    prod1_status:'En Vivo — v2.2.0',
+    prod2_desc:'Monitoreo del sistema en tiempo real en tu navegador. CPU, RAM, red, procesos — visualizados con la precisión de un panel de control.',
+    prod2_status:'En Desarrollo',
+    prod3_desc:'Gestor de contraseñas y almacenamiento cifrado local. AES-256, cero dependencia de nube. Tus datos se quedan en tu máquina.',
+    prod3_status:'Planificado — Q2 2025',
+    prod4_desc:'Interfaz OSINT y reconocimiento de red. Intel de dominio, DNS, puertos abiertos, WHOIS — todo en un panel limpio. Solo uso autorizado.',
+    prod4_status:'Planificado — Q3 2025',
+    prod5_desc:'Monitoreo de uptime ligero para tus proyectos. Controles configurables, historial de tiempos de respuesta y una página de estado limpia.',
+    prod5_status:'Planificado — Q4 2025',
+    prod_more:'MÁS EN CAMINO', prod_more_sub:"Lanzamos cuando está listo,\nno cuando hay prisa.",
+    team_label:'Las personas', team_title:'Quiénes somos',
+    team_sub:'Un equipo pequeño y enfocado. Nos importa más la calidad que el número.',
+    m1_name:'Fundador', m1_role:'Lead Developer · Arquitecto',
+    m1_bio:'Inició HyperOS con la creencia de que las herramientas para desarrolladores deben ser rápidas, mínimas y agradables de usar.',
+    m2_name:'Diseñador', m2_role:'UI/UX · Sistemas Visuales',
+    m2_bio:'Obsesionado con la intersección de estética y función. Cree que cada interfaz debería sentirse hecha para una persona específica.',
+    m3_name:'Seguridad', m3_role:'Investigación · Pentesting',
+    m3_bio:'Hacker ético e investigador de seguridad. Se asegura de que las herramientas HyperOS sean útiles y seguras.',
+    m4_name:'¿Tú?', m4_role:'Posición Abierta',
+    m4_bio:'Siempre buscamos personas que construyan cosas porque les encanta construir cosas.',
+    m4_cta:'Contáctanos',
+    manifesto_label:'Cómo pensamos', manifesto_title:'Nuestro Manifiesto',
+    m_t1:'El rendimiento no es opcional', m_d1:'Una herramienta que te hace esperar es una herramienta que no respeta tu tiempo. Cada milisegundo importa.',
+    m_t2:'Tus datos se quedan contigo', m_d2:'Sin telemetría. Sin analytics. Sin dependencia de nube. Lo que corre en tu máquina te pertenece.',
+    m_t3:'Lo simple supera a lo inteligente', m_d3:'Resistimos el impulso de agregar funciones que no justifican su lugar. Cada elemento debe justificar su existencia.',
+    m_t4:'Open source por defecto', m_d4:'Si construimos algo útil, la comunidad debe poder inspeccionarlo, mejorarlo y construir sobre él.',
+    m_t5:'Lanza cuando está listo', m_d5:'No lanzamos software roto para cumplir un plazo. Preferimos ser tardíos y excelentes.',
+    quote_text:'"La mejor herramienta es aquella en la que no tienes que pensar — simplemente funciona, exactamente como esperabas."',
+    contact_label:'Contáctanos', contact_title:'Hablemos',
+    contact_sub:'Reporte de bug, idea de colaboración, o solo quieres saludar — leemos todo.',
+    contact_response:'Tiempo de respuesta promedio:', contact_time:'menos de 24h',
+    footer_copy:'© 2024 HyperOS Project — Todos los derechos reservados',
+  },
+
+  fr: {
+    flag:'🇫🇷', label:'FR',
+    menu_about:'À Propos', menu_products:'Produits', menu_team:'Équipe',
+    menu_dev:'Développeurs', menu_window:'Fenêtre',
+    dd_our_story:'Notre Histoire', dd_manifesto:'Manifeste', dd_contact:'Nous Contacter',
+    dd_view_all:'Voir Tout', dd_meet_team:"L'Équipe", dd_join:'Rejoindre HyperOS',
+    dd_docs:'Documentation', dd_fullscreen:'Plein Écran', dd_top:'Haut de Page',
+    dd_theme:'Changer Thème',
+    hero_eyebrow:'HyperOS Project — Est. 2024',
+    hero_line1:'Nous Construisons', hero_line2:'L\'Avenir',
+    hero_sub:'Des outils ouverts pour les développeurs, chercheurs en sécurité\net utilisateurs qui refusent de se contenter de l\'ordinaire.',
+    hero_cta1:'Explorer les Produits', hero_cta2:'Notre Histoire',
+    stat_products:'Produits', stat_open:'Open Source', stat_ambition:'Ambition',
+    about_label:'À propos',
+    about_title:'Fait par des devs,<br/>pour des devs.',
+    about_text:'HyperOS est un projet indépendant né de la frustration face aux outils surchargés qui gênent plutôt qu\'ils n\'aident.<br/><br/>Nous concevons des logiciels légers et puissants qui respectent votre temps, votre machine et votre intelligence.',
+    terminal_line1:'Nous construisons des outils de niveau professionnel',
+    terminal_line2:'pour ceux qui construisent tout le reste.',
+    terminal_line3:'Pas de bloat. Pas de compromis. Pas de mensonges.',
+    terminal_uptime:'depuis 2024 — toujours en marche',
+    tag1:'Open Source', tag2:'Vie Privée', tag3:'Sans Télémétrie',
+    tag4:'Multi-Plateforme', tag5:'Clavier First', tag6:'Sombre par Défaut',
+    products_label:'Ce que nous livrons', products_title:'La Suite HyperOS',
+    products_sub:'Chaque outil est autonome, composable et construit avec la même philosophie de design.',
+    prod1_desc:'Un environnement CLI professionnel avec outils de cybersécurité, utilitaires dev, surveillance système et notes persistantes. Fonctionne sur Windows, macOS, Linux.',
+    prod1_status:'En Ligne — v2.2.0',
+    prod2_desc:'Surveillance système en temps réel dans votre navigateur. CPU, RAM, réseau, processus — visualisés avec la précision d\'un panneau de contrôle.',
+    prod2_status:'En Développement',
+    prod3_desc:'Gestionnaire de mots de passe et stockage chiffré local. AES-256, zéro dépendance cloud. Vos données restent sur votre machine.',
+    prod3_status:'Planifié — Q2 2025',
+    prod4_desc:'Interface OSINT et reconnaissance réseau. Intel de domaine, DNS, ports ouverts, WHOIS — agrégés dans un panneau épuré.',
+    prod4_status:'Planifié — Q3 2025',
+    prod5_desc:'Surveillance uptime légère pour vos projets. Contrôles configurables, historique des temps de réponse et une page de statut propre.',
+    prod5_status:'Planifié — Q4 2025',
+    prod_more:'BIENTÔT PLUS', prod_more_sub:"On livre quand c'est prêt,\npas quand on est pressé.",
+    team_label:"Les personnes", team_title:'Qui nous sommes',
+    team_sub:"Une petite équipe concentrée. Nous privilegions la qualité à la quantité.",
+    m1_name:'Fondateur', m1_role:'Lead Developer · Architecte',
+    m1_bio:"A lancé HyperOS avec la conviction que les outils pour développeurs doivent être rapides, minimaux et agréables à utiliser.",
+    m2_name:'Designer', m2_role:'UI/UX · Systèmes Visuels',
+    m2_bio:"Obsédé par l'intersection de l'esthétique et de la fonction. Croit que chaque interface devrait sembler faite pour une personne spécifique.",
+    m3_name:'Sécurité', m3_role:'Recherche · Tests d\'Intrusion',
+    m3_bio:'Hacker éthique et chercheur en sécurité. S\'assure que les outils HyperOS sont utiles et sûrs.',
+    m4_name:'Vous?', m4_role:'Poste Ouvert',
+    m4_bio:'Nous cherchons toujours des personnes qui construisent des choses parce qu\'elles aiment construire des choses.',
+    m4_cta:'Nous Contacter',
+    manifesto_label:'Comment nous pensons', manifesto_title:'Notre Manifeste',
+    m_t1:'La performance n\'est pas optionnelle', m_d1:'Un outil qui vous fait attendre est un outil qui ne respecte pas votre temps. Chaque milliseconde compte.',
+    m_t2:'Vos données restent les vôtres', m_d2:"Pas de télémétrie. Pas d'analytics. Pas de dépendance cloud sauf si vous le demandez.",
+    m_t3:'Le simple bat le complexe', m_d3:"Nous résistons à l'envie d'ajouter des fonctionnalités qui ne méritent pas leur place.",
+    m_t4:'Open source par défaut', m_d4:'Si nous construisons quelque chose d\'utile, la communauté doit pouvoir l\'inspecter et l\'améliorer.',
+    m_t5:'Livrer quand c\'est prêt', m_d5:"Nous ne publions pas de logiciels cassés pour respecter une date limite. Nous préférons être en retard et excellents.",
+    quote_text:'"Le meilleur outil est celui auquel vous n\'avez pas à penser — il fonctionne simplement, exactement comme vous l\'attendiez."',
+    contact_label:'Contactez-nous', contact_title:'Parlons',
+    contact_sub:'Rapport de bug, idée de collaboration, ou juste dire bonjour — nous lisons tout.',
+    contact_response:'Temps de réponse moyen:', contact_time:'moins de 24h',
+    footer_copy:'© 2024 HyperOS Project — Tous droits réservés',
+  },
+
+  de: {
+    flag:'🇩🇪', label:'DE',
+    menu_about:'Über uns', menu_products:'Produkte', menu_team:'Team',
+    menu_dev:'Entwickler', menu_window:'Fenster',
+    dd_our_story:'Unsere Geschichte', dd_manifesto:'Manifest', dd_contact:'Kontakt',
+    dd_view_all:'Alle Anzeigen', dd_meet_team:'Das Team', dd_join:'HyperOS Beitreten',
+    dd_docs:'Dokumentation', dd_fullscreen:'Vollbild', dd_top:'Nach Oben',
+    dd_theme:'Theme Wechseln',
+    hero_eyebrow:'HyperOS Project — Geg. 2024',
+    hero_line1:'Wir Bauen', hero_line2:'Die Zukunft',
+    hero_sub:'Offene Werkzeuge für Entwickler, Sicherheitsforscher\nund Power-User, die sich mit dem Gewöhnlichen nicht zufriedengeben.',
+    hero_cta1:'Produkte Entdecken', hero_cta2:'Unsere Geschichte',
+    stat_products:'Produkte', stat_open:'Open Source', stat_ambition:'Ambition',
+    about_label:'Über uns',
+    about_title:'Von Devs,<br/>für Devs.',
+    about_text:'HyperOS ist ein unabhängiges Projekt, das aus der Frustration über aufgeblähte, übertechnisierte Werkzeuge entstanden ist.<br/><br/>Wir entwickeln schlanke, leistungsstarke Software, die Ihre Zeit, Ihre Maschine und Ihre Intelligenz respektiert.',
+    terminal_line1:'Wir bauen professionelle Werkzeuge',
+    terminal_line2:'für die Menschen, die alles andere bauen.',
+    terminal_line3:'Kein Bloat. Kein Kompromiss. Kein Bullshit.',
+    terminal_uptime:'seit 2024 — läuft noch',
+    tag1:'Open Source', tag2:'Datenschutz Zuerst', tag3:'Keine Telemetrie',
+    tag4:'Plattformübergreifend', tag5:'Tastaturgesteuert', tag6:'Dunkel per Standard',
+    products_label:'Was wir liefern', products_title:'Die HyperOS Suite',
+    products_sub:'Jedes Tool ist eigenständig, kombinierbar und mit derselben Designphilosophie gebaut.',
+    prod1_desc:'Eine professionelle CLI-Umgebung mit integrierten Cybersecurity-Tools, Entwickler-Utilities, Systemüberwachung und dauerhaften Notizen. Läuft auf Windows, macOS, Linux.',
+    prod1_status:'Live — v2.2.0',
+    prod2_desc:'Echtzeit-Systemüberwachung im Browser. CPU, RAM, Netzwerk, Prozesse — visualisiert mit der Präzision eines Kontrollpanels.',
+    prod2_status:'In Entwicklung',
+    prod3_desc:'Lokaler Passwortmanager und verschlüsselter Dateispeicher. AES-256, keine Cloud-Abhängigkeit. Ihre Daten bleiben auf Ihrer Maschine.',
+    prod3_status:'Geplant — Q2 2025',
+    prod4_desc:'OSINT- und Netzwerk-Aufklärungsschnittstelle. Domain-Intel, DNS, offene Ports, WHOIS — alles in einem sauberen Panel.',
+    prod4_status:'Geplant — Q3 2025',
+    prod5_desc:'Leichte Uptime-Überwachung für Ihre Projekte. Konfigurierbare Prüfungen, Antwortzeitverlauf und eine saubere Statusseite.',
+    prod5_status:'Geplant — Q4 2025',
+    prod_more:'MEHR KOMMT', prod_more_sub:"Wir liefern wenn es bereit ist,\nnicht wenn es eilt.",
+    team_label:'Die Menschen', team_title:'Wer wir sind',
+    team_sub:'Ein kleines, fokussiertes Team. Uns liegt Qualität mehr als Quantität.',
+    m1_name:'Gründer', m1_role:'Lead Developer · Architekt',
+    m1_bio:'Startete HyperOS in der Überzeugung, dass Entwicklerwerkzeuge schnell, minimal und angenehm zu benutzen sein sollten.',
+    m2_name:'Designer', m2_role:'UI/UX · Visuelle Systeme',
+    m2_bio:'Besessen von der Schnittstelle zwischen Ästhetik und Funktion. Glaubt, dass jede Oberfläche sich anfühlen sollte, als wäre sie für eine bestimmte Person gemacht.',
+    m3_name:'Sicherheit', m3_role:'Forschung · Penetrationstests',
+    m3_bio:'Ethischer Hacker und Sicherheitsforscher. Stellt sicher, dass HyperOS-Tools für Sicherheitsarbeit nützlich und sicher sind.',
+    m4_name:'Sie?', m4_role:'Offene Stelle',
+    m4_bio:'Wir suchen immer Menschen, die Dinge bauen, weil sie das Bauen lieben.',
+    m4_cta:'Kontaktieren',
+    manifesto_label:'Wie wir denken', manifesto_title:'Unser Manifest',
+    m_t1:'Leistung ist nicht optional', m_d1:'Ein Werkzeug, das Sie warten lässt, ist ein Werkzeug, das Ihre Zeit nicht respektiert. Jede Millisekunde zählt.',
+    m_t2:'Ihre Daten bleiben Ihre', m_d2:'Keine Telemetrie. Keine Analytics. Keine Cloud-Abhängigkeit. Was auf Ihrer Maschine läuft, gehört Ihnen.',
+    m_t3:'Einfach schlägt clever', m_d3:'Wir widerstehen dem Drang, Funktionen hinzuzufügen, die ihren Platz nicht verdienen.',
+    m_t4:'Open Source als Standard', m_d4:'Wenn wir etwas Nützliches bauen, sollte die Community es inspizieren, verbessern und darauf aufbauen können.',
+    m_t5:'Liefern wenn es stimmt', m_d5:'Wir veröffentlichen keine kaputte Software, um eine Deadline zu erfüllen. Lieber spät und exzellent.',
+    quote_text:'"Das beste Werkzeug ist dasjenige, über das man nicht nachdenken muss — es funktioniert einfach, genau so, wie man es erwartet hat."',
+    contact_label:'Kontakt', contact_title:'Sprechen wir',
+    contact_sub:'Fehlerbericht, Kooperationsidee oder einfach Hallo sagen — wir lesen alles.',
+    contact_response:'Durchschnittliche Antwortzeit:', contact_time:'unter 24h',
+    footer_copy:'© 2024 HyperOS Project — Alle Rechte vorbehalten',
+  },
+
+  ja: {
+    flag:'🇯🇵', label:'JA',
+    menu_about:'概要', menu_products:'製品', menu_team:'チーム',
+    menu_dev:'開発者', menu_window:'ウィンドウ',
+    dd_our_story:'私たちの物語', dd_manifesto:'マニフェスト', dd_contact:'お問い合わせ',
+    dd_view_all:'すべて見る', dd_meet_team:'チームを見る', dd_join:'参加する',
+    dd_docs:'ドキュメント', dd_fullscreen:'全画面', dd_top:'トップへ',
+    dd_theme:'テーマ切替',
+    hero_eyebrow:'HyperOS Project — 2024年設立',
+    hero_line1:'私たちは作る', hero_line2:'未来を',
+    hero_sub:'開発者、セキュリティ研究者、そして平凡に満足しないパワーユーザーのためのオープンツール。',
+    hero_cta1:'製品を見る', hero_cta2:'私たちの物語',
+    stat_products:'製品', stat_open:'オープンソース', stat_ambition:'野望',
+    about_label:'私たちについて',
+    about_title:'開発者が作った、<br/>開発者のために。',
+    about_text:'HyperOSは、邪魔になる肥大化したツールへの不満から生まれた独立したプロジェクトです。<br/><br/>あなたの時間、マシン、そして知性を尊重するシンプルで強力なソフトウェアを設計しています。',
+    terminal_line1:'プロフェッショナルなツールを作ります',
+    terminal_line2:'それ以外のすべてを作る人々のために。',
+    terminal_line3:'無駄なし。妥協なし。嘘なし。',
+    terminal_uptime:'2024年から — まだ動いています',
+    tag1:'オープンソース', tag2:'プライバシー優先', tag3:'テレメトリなし',
+    tag4:'クロスプラットフォーム', tag5:'キーボード駆動', tag6:'デフォルトダーク',
+    products_label:'リリースするもの', products_title:'HyperOS スイート',
+    products_sub:'各ツールは独立していて、組み合わせ可能で、同じ設計哲学で作られています。',
+    prod1_desc:'サイバーセキュリティツール、開発ユーティリティ、システム監視、永続ノートを内蔵したプロCLI環境。Windows、macOS、Linuxで動作。',
+    prod1_status:'ライブ — v2.2.0',
+    prod2_desc:'ブラウザでのリアルタイムシステム監視。CPU、RAM、ネットワーク、プロセスを制御パネルの精度で可視化。',
+    prod2_status:'開発中',
+    prod3_desc:'ローカルファーストのパスワードマネージャーと暗号化ファイルストレージ。AES-256、クラウド依存なし。',
+    prod3_status:'予定 — Q2 2025',
+    prod4_desc:'OSINTとネットワーク偵察インターフェース。ドメイン情報、DNS、開放ポート、WHOISを一つのパネルに集約。',
+    prod4_status:'予定 — Q3 2025',
+    prod5_desc:'軽量なアップタイム監視ツール。設定可能なチェック、応答時間履歴、クリーンなステータスページ。',
+    prod5_status:'予定 — Q4 2025',
+    prod_more:'もっと来る', prod_more_sub:"準備ができた時にリリース、\n急ぐ時ではない。",
+    team_label:'メンバー', team_title:'私たちは誰か',
+    team_sub:'小さく集中したチーム。人数より質を重視します。',
+    m1_name:'創業者', m1_role:'リード開発者 · アーキテクト',
+    m1_bio:'開発ツールは高速で、ミニマルで、実際に使いやすいべきという信念からHyperOSを始めた。コアコードの大部分を書いている。',
+    m2_name:'デザイナー', m2_role:'UI/UX · ビジュアルシステム',
+    m2_bio:'美学と機能の交差点に魅了されている。すべてのインターフェースは特定の人のために作られたように感じるべきと信じている。',
+    m3_name:'セキュリティ', m3_role:'研究 · ペネトレーションテスト',
+    m3_bio:'倫理的ハッカーとセキュリティ研究者。HyperOSツールがセキュリティ作業に有用で安全であることを確認する。',
+    m4_name:'あなた？', m4_role:'募集中',
+    m4_bio:'ものを作ることが好きだからものを作る人を常に探しています。',
+    m4_cta:'連絡する',
+    manifesto_label:'私たちの考え方', manifesto_title:'マニフェスト',
+    m_t1:'パフォーマンスはオプションではない', m_d1:'待たせるツールはあなたの時間を尊重しないツールです。すべてのミリ秒が重要です。',
+    m_t2:'あなたのデータはあなたのもの', m_d2:'テレメトリなし。分析なし。要求しない限りクラウド依存なし。',
+    m_t3:'シンプルは賢さに勝る', m_d3:'場所を稼げない機能を追加する衝動に抵抗します。すべての要素が存在を正当化する必要があります。',
+    m_t4:'デフォルトでオープンソース', m_d4:'有用なものを作ったら、コミュニティがそれを検査し、改善し、その上に構築できるべきです。',
+    m_t5:'準備ができたらリリース', m_d5:'締め切りに間に合わせるために壊れたソフトウェアはリリースしません。遅くても優秀な方がいい。',
+    quote_text:'"最高のツールは考える必要のないもの — 期待した通りに、ただ動く。"',
+    contact_label:'連絡', contact_title:'話しましょう',
+    contact_sub:'バグ報告、コラボレーションのアイデア、またはただの挨拶 — すべて読みます。',
+    contact_response:'平均応答時間:', contact_time:'24時間以内',
+    footer_copy:'© 2024 HyperOS Project — 全著作権所有',
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+//  LANGUAGE ENGINE
+// ═══════════════════════════════════════════════════════════
+let currentLang = 'en';
+
+function setLang(code, el) {
+  if(code === currentLang) { closeLangMenu(); return; }
+  currentLang = code;
+  const t = LANGS[code];
+
+  // fade out
+  document.querySelectorAll('[data-i18n]').forEach(node => node.classList.add('lang-fade'));
+
+  setTimeout(() => {
+    // update all translated elements
+    document.querySelectorAll('[data-i18n]').forEach(node => {
+      const key = node.getAttribute('data-i18n');
+      if(t[key] !== undefined) node.innerHTML = t[key];
+    });
+
+    // update topbar lang button
+    document.getElementById('lang-flag').textContent  = t.flag;
+    document.getElementById('lang-label').textContent = t.label;
+
+    // update html lang attribute
+    document.documentElement.lang = code;
+
+    // mark selected
+    document.querySelectorAll('.lang-option').forEach(o => o.classList.remove('selected'));
+    if(el) el.classList.add('selected');
+
+    // fade back in
+    document.querySelectorAll('[data-i18n]').forEach(node => node.classList.remove('lang-fade'));
+  }, 150);
+
+  closeLangMenu();
+}
+
+function toggleLangMenu(e) {
+  e.stopPropagation();
+  // close all other menus
+  document.querySelectorAll('.tb-menu-item').forEach(m => m.classList.remove('active'));
+  document.getElementById('lang-btn').classList.toggle('active');
+}
+function closeLangMenu() {
+  document.getElementById('lang-btn').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CURSOR
+// ═══════════════════════════════════════════════════════════
+const cur  = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+(function animCursor(){
+  cur.style.left  = mx+'px'; cur.style.top  = my+'px';
+  rx += (mx-rx)*.12; ry += (my-ry)*.12;
+  ring.style.left = rx+'px'; ring.style.top = ry+'px';
+  requestAnimationFrame(animCursor);
+})();
+
+// ═══════════════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════════════
+function updateClock(){
+  const now = new Date();
+  document.getElementById('tb-time').textContent = now.toLocaleTimeString('it-IT');
+  document.getElementById('tb-date').textContent = now.toLocaleDateString('it-IT');
+}
+updateClock(); setInterval(updateClock,1000);
+
+// ═══════════════════════════════════════════════════════════
+//  DROPDOWN MENUS
+// ═══════════════════════════════════════════════════════════
+const menuItems = document.querySelectorAll('.tb-menu-item');
+menuItems.forEach(item => {
+  item.addEventListener('click', e => {
+    const was = item.classList.contains('active');
+    menuItems.forEach(m => m.classList.remove('active'));
+    closeLangMenu();
+    if(!was) item.classList.add('active');
+    e.stopPropagation();
+  });
+});
+document.addEventListener('click', () => {
+  menuItems.forEach(m => m.classList.remove('active'));
+  closeLangMenu();
+});
+
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth'});
+  menuItems.forEach(m => m.classList.remove('active'));
+  closeLangMenu();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  THEME TOGGLE
+// ═══════════════════════════════════════════════════════════
+let lightMode = false;
+function toggleTheme(){
+  lightMode = !lightMode;
+  const r = document.documentElement.style;
+  const icon = document.getElementById('themeIcon');
+  if(lightMode){
+    r.setProperty('--bg','#f0f4f8'); r.setProperty('--bg2','#e4ecf4');
+    r.setProperty('--bg3','#d8e4f0'); r.setProperty('--text','#0d1f30');
+    r.setProperty('--text-mid','#4a6a7a'); r.setProperty('--text-dim','#8aabb0');
+    r.setProperty('--border','#c0d0e0'); icon.textContent='☾';
+  } else {
+    r.setProperty('--bg','#06090d'); r.setProperty('--bg2','#0a0f16');
+    r.setProperty('--bg3','#0e1520'); r.setProperty('--text','#d0e0f0');
+    r.setProperty('--text-mid','#7a9aaa'); r.setProperty('--text-dim','#4a6070');
+    r.setProperty('--border','#1a2535'); icon.textContent='☀';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if(e.key==='Home') window.scrollTo({top:0,behavior:'smooth'});
+  if(e.key==='Escape'){ menuItems.forEach(m=>m.classList.remove('active')); closeLangMenu(); }
+  if(e.metaKey && e.key==='t'){ e.preventDefault(); toggleTheme(); }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  TOPBAR SCROLL EFFECT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('scroll', () => {
+  document.getElementById('topbar').style.background =
+    window.scrollY > 10 ? 'rgba(6,9,13,.97)' : 'rgba(8,12,18,.92)';
+});
+</script>
+</body>
+</html>
